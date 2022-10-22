@@ -1,35 +1,59 @@
-var express = require("express"),
-  User = require("../models/user"),
-  config = require("../config.js"),
-  jwt = require("jwt-simple");
+import express from "express";
+import asyncHandler from "express-async-handler";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import User from "../models/userModel.js";
+import { generateToken } from "../middleware/generateToken.js";
+import { config } from "../config.js";
 
-exports.login = function (req, res) {
-  console.log("Logged In");
-  User.findOne({ username: req.body.username }, (err, user) => {
-    if (err) {
-      console.log("Error Happened In auth /token Route");
-    } else {
-      var payload = {
-        id: user.id,
-        expire: Date.now() + 1000 * 60 * 60 * 24 * 7, //7 days
-      };
-      var token = jwt.encode(payload, config.jwtSecret);
-      res.json({
-        token: token,
-      });
-    }
+export const Register = asyncHandler(async (req, res) => {
+  const { username, email, password } = req.body;
+  if (!username || !email || !password) {
+    res.status(400);
+    throw new Error("please enter all the field");
+  }
+  const userExist = await User.findOne({ email });
+  if (userExist) {
+    res.status(400);
+    throw new Error("This user already exists");
+  }
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+  // const result = await cloudinary.uploader.upload(req.file.path);
+
+  const user = await User.create({
+    username,
+    email,
+    password: hashedPassword,
+    // profilePicture: result.secure_url,
+    // cloudinary_id: result.public_id,
   });
-};
-exports.register = function (req, res) {
-  User.register(
-    new User({ name: req.body.name, username: req.body.username }),
-    req.body.password,
-    function (err, msg) {
-      if (err) {
-        res.send(err);
-      } else {
-        res.send({ message: "Successful" });
-      }
-    }
-  );
-};
+  if (user) {
+    res.status(201).json({
+      _id: user.id,
+      username: user.username,
+      email: user.email,
+      token: generateToken(user._id),
+    });
+  } else {
+    res.status(400);
+    throw new Error("Invalid user data");
+  }
+});
+export const getUserById = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const userExists = await User.findById({ _id: userId });
+    res.status(200).json(userExists);
+  } catch (error) {
+    res.status(400).json({ message: "this user doesn't exists" });
+  }
+});
+export const getUsers = asyncHandler(async (req, res) => {
+  try {
+    const users = await User.find();
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(400).json({ message: "Aucun utilisateur trouvé" });
+  }
+});
