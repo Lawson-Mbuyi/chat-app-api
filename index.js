@@ -11,6 +11,8 @@ import MessageRoute from "./routes/MessageRoute.js";
 import strategyLocal from "./strategies/strategyLocal.js";
 import session from "express-session";
 dotenv.config();
+import { createServer } from "http";
+import { Server } from "socket.io";
 
 const app = express();
 //passport config
@@ -38,41 +40,53 @@ app.use(passport.session());
 app.use(authRoute);
 app.use(chatRoute);
 app.use(MessageRoute);
-app.listen(process.env.PORT, () => {
-  console.log(`Server Started at ${process.env.PORT}`);
+// app.listen(process.env.PORT, () => {
+//   console.log(`Server Started at ${process.env.PORT}`);
+// });
+
+const server = createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
 });
+
 let users = [];
+const addUser = (userId, socketId) => {
+  !users.some((user) => user.userId === userId) &&
+    users.push({ userId, socketId });
+};
 
-// const httpServer = createServer();
-// const io = new Server(httpServer, {
-//   cors: {
-//     origin: "http://localhost:3000",
-//   },
-// });
-// httpServer.listen(5000);
-// io.on("connection", (socket) => {
-//   console.log("a user connected");
-// });
-// const addUser = (userId, socketId) => {
-//   !users.some((user) => user.userId === userId) &&
-//     users.push({ userId, socketId });
-// };
-// const removeUser = (socketId) => {
-//   users = users.filter((user) => user.socketId != socketId);
-// };
-// const getUser = (userId) => {
-//   return users.find((user) => user.userId === userId);
-// };
-// io.on("sendMessage", ({ senderId, receiverId, tex }) => {
-//   const user = getUser(receiverId);
-//   io.to(user.socketId).emit("getMessage", {
-//     senderId,
-//     text,
-//   });
-// });
+const removeUser = (socketId) => {
+  users = users.filter((user) => user.socketId !== socketId);
+};
+const getUser = (userId) => {
+  return users.find((user) => user.userId === userId);
+};
 
-// io.on("disconnect", () => {
-//   console.log("a user disconnected!");
-//   removeUser(socketId);
-//   socket.emit("getUsers", users);
-// });
+io.on("connection", (socket) => {
+  console.log("a user connected");
+  // add-user event
+  socket.on("add-user", (userId) => {
+    addUser(userId, socket.id);
+    io.emit("get-users", users);
+  });
+
+  socket.on("send-message", ({ senderId, receiverId, messageText }) => {
+    const user = getUser(receiverId);
+    if (user) {
+      io.to(user.socketId).emit("get-message", {
+        senderId,
+        messageText,
+      });
+    }
+  });
+  io.on("disconnect", (socket) => {
+    console.log("a user disconnected");
+    removeUser(socket.id);
+    io.emit("get-users", users);
+  });
+});
+
+server.listen(process.env.PORT, () => console.log("listening..."));
