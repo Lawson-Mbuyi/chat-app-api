@@ -1,13 +1,13 @@
 {
-  "name": "samplepassportjwtauth",
+  "name": "chat-app",
   "version": "1.0.0",
-  "description": "Sample Node.js and Passport JWT authentication.",
+  "description": "simple chat-application using socket.io",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "nodemon index.js"
   },
-  "author": "digvijay <digvijayrn786@gmail.com>",
+  "author": "Lawson",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.0",
@@ -19,6 +19,7 @@
     "express-session": "^1.17.3",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.9.17",
+    "multer": "^1.4.5-lts.1",
     "nodemon": "^2.0.20",
     "passport": "^0.6.0",
     "passport-local": "^1.0.0",

@@ -4,10 +4,11 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import User from "../models/userModel.js";
 import { generateToken } from "../middleware/generateToken.js";
+import { v2 as cloudinary } from "cloudinary";
 import { config } from "../config.js";
 
 export const Register = asyncHandler(async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, profilePicture } = req.body;
   if (!username || !email || !password) {
     res.status(400);
     throw new Error("please enter all the field");
@@ -19,20 +20,19 @@ export const Register = asyncHandler(async (req, res) => {
   }
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
-  // const result = await cloudinary.uploader.upload(req.file.path);
 
   const user = await User.create({
     username,
     email,
     password: hashedPassword,
-    // profilePicture: result.secure_url,
-    // cloudinary_id: result.public_id,
+    profilePicture,
   });
   if (user) {
     res.status(201).json({
       _id: user.id,
       username: user.username,
       email: user.email,
+      profilePicture:user.profilePicture,
       token: generateToken(user._id),
     });
   } else {
@@ -57,3 +57,31 @@ export const getUsers = asyncHandler(async (req, res) => {
     res.status(400).json({ message: "Aucun utilisateur trouvé" });
   }
 });
+export const handleUpload = async (req, res) => {
+  try {
+    const fileStr = req.body.data;
+    console.log(fileStr);
+    const uploadResponse = await cloudinary.uploader.upload(fileStr, {
+      cloud_name: "esaie",
+      api_key: "158671153929188",
+      api_secret: "sPwHT8I-oE1wFExMajUdBAr1iZQ",
+      resource_type: "image",
+      upload_preset: "chat-app",
+    });
+    console.log(uploadResponse);
+    res.json({ msg: "File uploaded sucessfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ err: "Something went wrong" });
+  }
+};
+export const getUsersProfile = async (req, res) => {
+  const { resources } = await cloudinary.search
+    .expression("folder:cloudinary_react")
+    .sort_by("public_id", "desc")
+    .max_results(30)
+    .execute();
+
+  const publicIds = resources.map((file) => file.public_id);
+  res.send(publicIds);
+};

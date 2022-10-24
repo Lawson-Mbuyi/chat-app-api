@@ -12,12 +12,6 @@ const userSchema = new mongoose.Schema({
   profilePicture: {
     type: String,
   },
-  cloudinary_id: {
-    type: String,
-  },
-  about: {
-    type: String,
-  },
   isAdmin: {
     type: Boolean,
     default: false,
