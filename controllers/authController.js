@@ -50,8 +50,9 @@ export const getUserById = asyncHandler(async (req, res) => {
   }
 });
 export const getUsers = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
   try {
-    const users = await User.find();
+    const users = await User.find({_id:{$ne:userId}});
     res.status(200).json(users);
   } catch (error) {
     res.status(400).json({ message: "Aucun utilisateur trouvé" });

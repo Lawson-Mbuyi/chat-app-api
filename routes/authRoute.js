@@ -13,7 +13,7 @@ import {
 const router = express.Router();
 
 router.get("/api/users/:userId", getUserById);
-router.get("/api/users", getUsers);
+router.get("/api/users/all/:userId", getUsers);
 router.post("/api/users", Register);
 router.get('/api/users/images',getUsersProfile)
 router.post("/api/users/login", authFilter);

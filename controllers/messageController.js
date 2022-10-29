@@ -21,6 +21,6 @@ export const getMessages = asyncHandler(async (req, res) => {
   if (response) {
     res.status(200).json(response);
   } else {
-    throw new Error("the chatId has'nt been retrieved");
+    throw new Error("this's your first chat");
   }
 });
