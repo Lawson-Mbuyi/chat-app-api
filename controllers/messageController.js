@@ -16,8 +16,8 @@ export const CreateMessage = async (req, res) => {
   }
 };
 export const getMessages = asyncHandler(async (req, res) => {
-  const { chaId } = req.params;
-  const response = await Message.find({ chaId });
+  const { chatId } = req.params;
+  const response = await Message.find({chatId: chatId });
   if (response) {
     res.status(200).json(response);
   } else {
