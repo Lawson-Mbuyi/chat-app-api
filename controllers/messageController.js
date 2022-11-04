@@ -2,11 +2,12 @@ import Message from "../models/MessageModel.js";
 import asyncHandler from "express-async-handler";
 
 export const CreateMessage = async (req, res) => {
-  const { chatId, senderId, messageText } = req.body;
+  const { chatId, senderId, messageText,secureUrl } = req.body;
   const message = new Message({
     chatId,
     senderId,
     messageText,
+    secureUrl,
   });
   try {
     const response = await message.save();

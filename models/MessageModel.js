@@ -11,6 +11,9 @@ const MessageSchema = new mongoose.Schema(
     messageText: {
       type: String,
     },
+    secureUrl: {
+      type: String,
+    },
   },
   {
     timestamps: true,
