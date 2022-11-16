@@ -19,15 +19,15 @@ const app = express();
 strategyLocal(passport);
 
 mongoose
-  .connect(process.env.CONNECTION_URL, {
+  .connect(process.env.LOCAL_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("Connexion à MongoDB réussie !"))
-  .catch(() => console.log("Connexion à MongoDB échouée !"));
+  .then(() => console.log("LOcally connected!"))
+  .catch(() => console.log("Failed to connect to mongodb !"));
 
-app.use(express.json({limit: '50mb'}));
-app.use(express.urlencoded({limit: '50mb', extended: true}));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(
   session({
     secret: process.env.SECRETE_KEY,
@@ -70,15 +70,19 @@ io.on("connection", (socket) => {
     io.emit("get-users", users);
   });
 
-  socket.on("send-message", ({ senderId, receiverId, messageText }) => {
-    const user = getUser(receiverId);
-    if (user) {
-      io.to(user.socketId).emit("get-message", {
-        senderId,
-        messageText,
-      });
+  socket.on(
+    "send-message",
+    ({ senderId, receiverId, messageText, secureUrl }) => {
+      const user = getUser(receiverId);
+      if (user) {
+        io.to(user.socketId).emit("get-message", {
+          senderId,
+          messageText,
+          secureUrl,
+        });
+      }
     }
-  });
+  );
   io.on("disconnect", (socket) => {
     console.log("a user disconnected");
     removeUser(socket.id);

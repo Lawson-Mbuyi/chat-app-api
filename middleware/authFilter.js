@@ -1,4 +1,5 @@
 import passport from "passport";
+
 export const authFilter= (req, res, next)=> {
     passport.authenticate("local", function (err, user, info) {
       if (err) {
